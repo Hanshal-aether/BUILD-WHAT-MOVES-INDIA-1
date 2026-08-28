@@ -1,0 +1,27 @@
+{
+  "name": "ration-saathi",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "db:generate": "prisma generate",
+    "db:push": "prisma db push",
+    "db:seed": "node prisma/seed.js"
+  },
+  "dependencies": {
+    "@google/genai": "^2.19.0",
+    "@prisma/client": "^5.20.0",
+    "next": "14.2.5",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.4.19",
+    "postcss": "^8.4.38",
+    "prisma": "^5.20.0",
+    "tailwindcss": "^3.4.7"
+  }
+}
