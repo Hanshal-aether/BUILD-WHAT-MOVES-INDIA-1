@@ -3,6 +3,7 @@ import { Sora, Inter } from 'next/font/google';
 import { LanguageProvider } from '../context/LanguageContext';
 import { StateProvider } from '../context/StateContext';
 import { ThemeProvider } from '../context/ThemeContext';
+import FAQWidget from '../components/FAQWidget';
 
 const sora = Sora({
   subsets: ['latin'],
@@ -32,7 +33,8 @@ export default function RootLayout({ children }) {
           <LanguageProvider>
             <StateProvider>{children}</StateProvider>
           </LanguageProvider>
-        </ThemeProvider>
+                </ThemeProvider>
+        <FAQWidget />
       </body>
     </html>
   );

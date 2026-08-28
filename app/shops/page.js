@@ -46,7 +46,25 @@ function ShopsContent() {
     return () => clearTimeout(timer);
   }, [notice]);
 
-  async function bookSlot(shop, slot) {
+    async function bookSlot(shop, slot) {
+    const phone = window.localStorage.getItem('ration_saathi_phone') || 'guest';
+    const bookingKey = `ration_saathi_active_booking_${phone}`;
+
+    const activeRaw = window.localStorage.getItem(bookingKey);
+    if (activeRaw) {
+      try {
+        const active = JSON.parse(activeRaw);
+        if (active.slotId !== slot.id) {
+          const proceed = window.confirm(
+            `You already have a slot booked at ${active.shopName} on ${active.date}, ${active.time}. Book this new slot anyway?`
+          );
+          if (!proceed) return;
+        }
+      } catch {
+        // ignore corrupt stored booking
+      }
+    }
+
     setBooking(slot.id);
     try {
       const res = await fetch(`/api/timeslots/${slot.id}/book`, { method: 'POST' });
@@ -60,11 +78,15 @@ function ShopsContent() {
         )
       );
       setActiveShop(null);
-      setNotice({
-        shop: shop.name,
+      const bookedInfo = {
+        shopId: shop.id,
+        shopName: shop.name,
+        slotId: slot.id,
         date: formatDateLabel(slot.date),
         time: `${slot.startTime} - ${slot.endTime}`,
-      });
+      };
+      window.localStorage.setItem(bookingKey, JSON.stringify(bookedInfo));
+      setNotice(bookedInfo);
     } catch (e) {
       setNotice({ error: e.message || 'Something went wrong. Please try again.' });
     } finally {

@@ -6,7 +6,6 @@ import ProtectedRoute from '../../components/ProtectedRoute';
 import Header from '../../components/Header';
 import BottomNav from '../../components/BottomNav';
 import StateSelectorModal from '../../components/StateSelectorModal';
-import AIChat from '../../components/AIChat';
 import { useLanguage } from '../../context/LanguageContext';
 
 const STATUS_STYLES = {
@@ -32,8 +31,14 @@ function StatusContent() {
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState(null);
 
-  useEffect(() => {
-    fetch('/api/applications')
+    useEffect(() => {
+    const phone = window.localStorage.getItem('ration_saathi_phone');
+    if (!phone) {
+      setApps([]);
+      setLoading(false);
+      return;
+    }
+    fetch(`/api/applications?phone=${encodeURIComponent(phone)}`)
       .then((res) => res.json())
       .then((data) => setApps(Array.isArray(data) ? data : []))
       .catch(() => setApps([]))
@@ -178,7 +183,6 @@ function StatusContent() {
           })}
         </div>
       </main>
-      <AIChat />
       <BottomNav />
     </div>
   );

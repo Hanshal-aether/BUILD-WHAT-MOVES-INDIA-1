@@ -32,6 +32,14 @@ module.exports = {
         display: ['var(--font-display)', 'Sora', 'ui-sans-serif', 'system-ui'],
         body: ['var(--font-body)', 'Inter', 'ui-sans-serif', 'system-ui'],
       },
+            boxShadow: {
+        glow: '0 10px 40px -8px rgba(109, 91, 246, 0.45)',
+        'glow-saffron': '0 10px 30px -6px rgba(251, 191, 36, 0.45)',
+        soft: '0 2px 10px rgba(15, 13, 43, 0.06)',
+      },
+      borderRadius: {
+        '4xl': '2rem',
+      },
       keyframes: {
         fadeIn: {
           '0%': { opacity: '0', transform: 'translateY(8px)' },

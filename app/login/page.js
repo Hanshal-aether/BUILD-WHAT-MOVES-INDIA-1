@@ -40,7 +40,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen relative flex items-center justify-center px-4 overflow-hidden">
+    <div className="min-h-screen relative flex items-center justify-center px-4 overflow-hidden bg-grain">
       <div className="absolute inset-0 bg-ink" />
       <div className="absolute inset-0 bg-gradient-to-br from-brand-900 via-brand-700 to-brand-500" />
       <div className="absolute -top-32 -left-24 w-[28rem] h-[28rem] bg-brand-400/40 rounded-full blur-3xl" />
@@ -49,8 +49,7 @@ export default function LoginPage() {
       <div
         className="absolute inset-0 opacity-[0.07]"
         style={{
-          backgroundImage:
-            'radial-gradient(circle, #ffffff 1px, transparent 1px)',
+          backgroundImage: 'radial-gradient(circle, #ffffff 1px, transparent 1px)',
           backgroundSize: '28px 28px',
         }}
       />
@@ -64,8 +63,8 @@ export default function LoginPage() {
 
       <div className="relative z-10 w-full max-w-sm animate-fadeIn">
         <div className="text-center mb-7">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white/10 border border-white/20 backdrop-blur mb-4 shadow-xl">
-            <Logo size={40} />
+          <div className="inline-flex items-center justify-center bg-white rounded-2xl p-3 mb-4 shadow-xl">
+            <Logo size={56} />
           </div>
           <h1 className="text-3xl font-display font-bold text-white tracking-tight">{t('login.title')}</h1>
           <p className="text-white/70 text-sm mt-2">{t('login.subtitle')}</p>
@@ -73,12 +72,10 @@ export default function LoginPage() {
 
         <form
           onSubmit={handleSubmit}
-          className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl p-6 shadow-2xl space-y-4"
+          className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl p-6 shadow-2xl ring-1 ring-inset ring-white/10 space-y-4"
         >
           <div>
-            <label className="block text-xs font-medium text-white/90 mb-1.5">
-              {t('login.phoneLabel')}
-            </label>
+            <label className="block text-xs font-medium text-white/90 mb-1.5">{t('login.phoneLabel')}</label>
             <input
               type="tel"
               inputMode="numeric"
@@ -86,14 +83,12 @@ export default function LoginPage() {
               value={phone}
               onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
               placeholder={t('login.phonePlaceholder')}
-              className="w-full px-4 py-3 rounded-xl bg-white/90 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-white"
+              className="w-full px-4 py-3 rounded-xl bg-white/90 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-white"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-white/90 mb-1.5">
-              {t('login.pinLabel')}
-            </label>
+            <label className="block text-xs font-medium text-white/90 mb-1.5">{t('login.pinLabel')}</label>
             <input
               type="password"
               inputMode="numeric"
@@ -101,7 +96,7 @@ export default function LoginPage() {
               value={pin}
               onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
               placeholder={t('login.pinPlaceholder')}
-              className="w-full px-4 py-3 rounded-xl bg-white/90 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-white"
+              className="w-full px-4 py-3 rounded-xl bg-white/90 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-white"
             />
           </div>
 

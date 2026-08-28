@@ -24,16 +24,16 @@ export default function Header() {
       <div className="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between gap-2">
         <button
           onClick={() => router.push('/')}
-          className="flex items-center gap-2 font-semibold text-ink dark:text-white shrink-0"
+          className="flex items-center gap-2.5 font-semibold text-ink dark:text-white shrink-0"
         >
-          <Logo size={30} />
-          <span className="hidden sm:inline tracking-tight font-display">{t('appName')}</span>
+          <Logo size={32} className="drop-shadow-sm" />
+          <span className="hidden sm:inline tracking-tight font-display text-[15px]">{t('appName')}</span>
         </button>
 
         <div className="flex items-center gap-1.5 sm:gap-3">
           <button
             onClick={() => setModalOpen(true)}
-            className="flex items-center gap-1.5 text-sm px-2.5 sm:px-3 py-1.5 rounded-full border border-brand-200 dark:border-white/15 bg-white/80 dark:bg-white/5 dark:text-gray-200 hover:bg-brand-50 dark:hover:bg-white/10 hover:border-brand-400 transition-all"
+            className="flex items-center gap-1.5 text-sm px-2.5 sm:px-3 py-1.5 rounded-full border border-brand-200 dark:border-white/15 bg-white/80 dark:bg-white/5 dark:text-gray-200 shadow-soft hover:bg-brand-50 dark:hover:bg-white/10 hover:border-brand-400 transition-all"
           >
             <span>{isPilot ? '📍' : '🌐'}</span>
             <span className="hidden xs:inline max-w-[6rem] sm:max-w-none truncate">{state}</span>
@@ -41,7 +41,7 @@ export default function Header() {
 
           <button
             onClick={toggleLang}
-            className="text-sm font-medium px-2.5 sm:px-3 py-1.5 rounded-full border border-brand-200 dark:border-white/15 bg-white/80 dark:bg-white/5 dark:text-gray-200 hover:bg-brand-50 dark:hover:bg-white/10 hover:border-brand-400 transition-all"
+            className="text-sm font-medium px-2.5 sm:px-3 py-1.5 rounded-full border border-brand-200 dark:border-white/15 bg-white/80 dark:bg-white/5 dark:text-gray-200 shadow-soft hover:bg-brand-50 dark:hover:bg-white/10 hover:border-brand-400 transition-all"
           >
             {lang === 'en' ? 'हिं' : 'EN'}
           </button>
@@ -49,7 +49,7 @@ export default function Header() {
           <button
             onClick={toggleTheme}
             aria-label="Toggle dark mode"
-            className="w-9 h-9 rounded-full border border-brand-200 dark:border-white/15 bg-white/80 dark:bg-white/5 hover:bg-brand-50 dark:hover:bg-white/10 hover:border-brand-400 transition-all flex items-center justify-center"
+            className="w-9 h-9 rounded-full border border-brand-200 dark:border-white/15 bg-white/80 dark:bg-white/5 shadow-soft hover:bg-brand-50 dark:hover:bg-white/10 hover:border-brand-400 transition-all flex items-center justify-center"
           >
             {theme === 'dark' ? '☀️' : '🌙'}
           </button>
@@ -57,7 +57,7 @@ export default function Header() {
           <div className="relative">
             <button
               onClick={() => setSettingsOpen((v) => !v)}
-              className="w-9 h-9 rounded-full border border-brand-200 dark:border-white/15 bg-white/80 dark:bg-white/5 hover:bg-brand-50 dark:hover:bg-white/10 hover:border-brand-400 transition-all flex items-center justify-center"
+              className="w-9 h-9 rounded-full border border-brand-200 dark:border-white/15 bg-white/80 dark:bg-white/5 shadow-soft hover:bg-brand-50 dark:hover:bg-white/10 hover:border-brand-400 transition-all flex items-center justify-center"
               aria-label="Settings"
             >
               ⚙️

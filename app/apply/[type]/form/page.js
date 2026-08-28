@@ -6,7 +6,6 @@ import ProtectedRoute from '../../../../components/ProtectedRoute';
 import Header from '../../../../components/Header';
 import BottomNav from '../../../../components/BottomNav';
 import StateSelectorModal from '../../../../components/StateSelectorModal';
-import AIChat from '../../../../components/AIChat';
 import { useLanguage } from '../../../../context/LanguageContext';
 import { useAppState } from '../../../../context/StateContext';
 
@@ -108,16 +107,18 @@ function ApplyFormContent() {
     setStep((s) => Math.max(1, s - 1));
   }
 
-  async function handleSubmit() {
+    async function handleSubmit() {
     setSubmitting(true);
     setError('');
     try {
+      const phone = window.localStorage.getItem('ration_saathi_phone');
       const res = await fetch('/api/applications', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           applicationType: type,
           state,
+          phone,
           formData: { contact, reason, documents: docs },
         }),
       });
@@ -178,7 +179,7 @@ function ApplyFormContent() {
           />
         </div>
 
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 animate-fadeIn" key={step}>
+                <div className="bg-white text-gray-900 rounded-2xl border border-gray-100 shadow-sm p-5 animate-fadeIn" key={step}>
           {step === 1 && (
             <div>
               <h2 className="font-semibold text-lg mb-4">{t('form.contactTitle')}</h2>
@@ -320,7 +321,6 @@ function ApplyFormContent() {
         </div>
       </main>
 
-      <AIChat />
       <BottomNav />
     </div>
   );
