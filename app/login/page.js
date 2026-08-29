@@ -115,9 +115,15 @@ export default function LoginPage() {
             {loading ? t('login.loading') : t('login.submit')}
           </button>
 
-          <p className="text-center text-xs text-white/70">{t('login.demoHint')}</p>
+                                      <p className="text-center text-xs text-white/70">{t('login.demoHint')}</p>
+          
+            <a href="/about"
+            className="block text-center text-xs text-white/60 hover:text-white/90 underline transition-colors pt-1"
+          >
+            Why we built this →
+          </a>
         </form>
-      </div>
+      </div> 
     </div>
   );
 }

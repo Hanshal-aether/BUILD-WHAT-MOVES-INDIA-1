@@ -1,5 +1,6 @@
 'use client';
 
+import Footer from '../components/Footer';
 import { useRouter } from 'next/navigation';
 import ProtectedRoute from '../components/ProtectedRoute';
 import Header from '../components/Header';
@@ -81,6 +82,7 @@ function HomeContent() {
         </div>
       </main>
 
+            <Footer />
       <BottomNav />
     </div>
   );
