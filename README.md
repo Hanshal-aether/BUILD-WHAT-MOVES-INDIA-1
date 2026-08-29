@@ -7,6 +7,8 @@ fair price shop time slot. No Aadhar number is ever collected.
 
 Built for **Build What Moves India 2026**.
 
+**Built by:** [Hanshal Gajula](https://www.linkedin.com/in/hanshal-gajula)
+
 ## The problem
 
 Ration shops across India verify citizens through Aadhaar-linked fingerprint
