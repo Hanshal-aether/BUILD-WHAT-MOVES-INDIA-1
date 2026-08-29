@@ -11,17 +11,18 @@ Built for **Build What Moves India 2026**.
 
 ## The problem
 
-Ration shops across India verify citizens through Aadhaar-linked fingerprint
-scanners before handing over grain. The single biggest reason that fails:
-fingerprints genuinely wear down with age and years of manual labour —
-construction workers, farmers, and the elderly are hit hardest. When a scan
-fails, there's often no clear path back into the system, just repeat visits
-and no explanation of what to do next.
+A ration card application can fail for a dozen reasons — a mismatched
+document, a fingerprint scanner that won't read a worn print, a card flagged
+during a routine re-verification. The real problem isn't any single cause.
+It's that when something goes wrong, the system doesn't say what — people
+are simply told to come back, with no idea if the next trip will work.
 
-We can't fix a fingerprint scanner. Ration Saathi makes sure a person always
-has a way to check where their application stands, fix a flagged issue
-without starting over, and reserve a real shop slot instead of guessing when
-to show up.
+Biometric failure is the sharpest example: fingerprints genuinely wear down
+with age and years of manual labour, so elderly citizens and laborers are
+hit hardest by scanners that won't read their prints. We can't fix a
+scanner. What Ration Saathi fixes is the silence around it — whatever the
+cause, a person can always see exactly what's wrong and what to do next,
+instead of guessing.
 
 ## Features
 
