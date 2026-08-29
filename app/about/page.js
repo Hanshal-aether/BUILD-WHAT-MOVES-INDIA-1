@@ -32,9 +32,10 @@ export default function AboutPage() {
       </header>
 
       <main className="max-w-3xl mx-auto px-4 py-14">
-        <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold tracking-wide uppercase text-brand-600 dark:text-saffron-400 bg-brand-50 dark:bg-white/10 border border-brand-100 dark:border-white/15 rounded-full px-3 py-1 mb-4">
+                <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold tracking-wide uppercase text-brand-600 dark:text-saffron-400 bg-brand-50 dark:bg-white/10 border border-brand-100 dark:border-white/15 rounded-full px-3 py-1 mb-4">
           {text.badge}
         </span>
+        <p className="text-base text-gray-500 dark:text-gray-400 mb-4">{text.intro}</p>
         <h1 className="text-3xl sm:text-4xl font-display font-bold tracking-tight text-gray-900 dark:text-white leading-tight mb-6">
           {text.heading}
         </h1>
