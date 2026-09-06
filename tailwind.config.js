@@ -30,6 +30,11 @@ module.exports = {
           500: '#FF6B00',
           600: '#E65F00',
         },
+        cream: {
+          50: '#FBF8F1',
+          100: '#F6F0E2',
+          200: '#EDE2C8',
+        },
         ink: '#0A1730',
       },
       fontFamily: {

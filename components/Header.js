@@ -10,7 +10,7 @@ import Logo from './Logo';
 
 export default function Header() {
   const router = useRouter();
-  const { lang, toggleLang, t } = useLanguage();
+  const { lang, toggleLang, langLabel, t } = useLanguage();
   const { state, isPilot, setModalOpen } = useAppState();
   const { theme, toggleTheme } = useTheme();
   const { largeText, toggleLargeText } = useAccessibility();
@@ -45,7 +45,7 @@ export default function Header() {
             onClick={toggleLang}
             className="text-sm font-medium px-2.5 sm:px-3 py-1.5 rounded-full border border-brand-200 dark:border-white/15 bg-white/80 dark:bg-white/5 dark:text-gray-200 shadow-soft hover:bg-brand-50 dark:hover:bg-white/10 hover:border-brand-400 transition-all"
           >
-            {lang === 'en' ? 'हिं' : 'EN'}
+            {langLabel}
           </button>
 
           <button

@@ -21,7 +21,7 @@ function HomeContent() {
   const { t } = useLanguage();
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-ink">
+    <div className="min-h-screen bg-cream-50 dark:bg-ink">
       <Header />
       <StateSelectorModal />
 

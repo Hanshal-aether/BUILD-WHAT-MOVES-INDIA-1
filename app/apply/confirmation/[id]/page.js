@@ -19,7 +19,7 @@ function ConfirmationContent() {
   }, [params.id]);
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-ink">
+    <div className="min-h-screen bg-cream-50 dark:bg-ink">
       <Header />
       <main className="max-w-md mx-auto px-4 py-10 pb-24 text-center">
         <div className="text-6xl mb-4 animate-popIn">✅</div>

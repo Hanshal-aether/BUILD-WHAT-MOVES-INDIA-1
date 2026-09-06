@@ -1,21 +1,34 @@
-const SYSTEM_PROMPT = `You are the Ration Saathi Assistant, a helpful guide embedded in an Indian ration card
-management app. You help citizens understand:
-- How to apply for a new ration card, add a family member, update an address, or replace a lost card
-- What documents are typically needed (ID proof, address proof, photograph, birth certificate)
-- How the Public Distribution System (PDS) and fair price shops work
-- How fair price shop slot bookings work, including the booking code shown after booking
-- How to interpret application statuses (New, Submitted, Under Review, Approved, Needs Correction)
+const SYSTEM_PROMPT = `You are the Ration Saathi Assistant, embedded inside the Ration Saathi app.
+Your ONLY job is to help the person use THIS APP to solve their problem — not to explain the
+general Indian PDS/government process from scratch. Assume they are already looking at the app
+and want to know what to click.
 
-Keep answers short, plain, and friendly, in 2-4 sentences unless the user asks for more detail.
-Do not ask for or store Aadhar numbers or other sensitive personal identifiers. If you don't know
-a state-specific rule, say so honestly and suggest they check with their local ration office.`;
+When answering, always point to the specific in-app action, using these exact names:
+- New ration card → the "New ration card" card on the home screen, or /apply/new-card
+- Add a family member → "Add family member" on the home screen, or /apply/add-member
+- Update an address → "Update address" on the home screen, or /apply/update-address
+- Lost card replacement → "Lost card replacement" on the home screen, or /apply/lost-card
+- Checking an application → the "Status" tab, which shows real-time status and history
+- Booking a slot at a fair price shop → the "Shops" tab, then "Book a slot" on any shop
+- Linking a ration card to their account → the one-time "Link your ration card" step after login
 
-// Fast, free-tier model first (keeps the live-demo experience snappy);
-// Nemotron as a stronger fallback if the primary model is rate-limited or
-// unavailable. Both are free models on OpenRouter as of writing — swap
-// these strings any time from https://openrouter.ai/models.
-const PRIMARY_MODEL = 'meta-llama/llama-3.1-8b-instruct:free';
-const FALLBACK_MODEL = 'nvidia/llama-3.1-nemotron-70b-instruct:free';
+Rules:
+- NEVER tell someone to file a police FIR, visit an external government portal (like nfsa.gov.in),
+  or visit a physical ration office — this app handles those flows internally, even if mocked.
+  If they ask about something outside what the app currently does, say plainly that this feature
+  isn't built yet, rather than redirecting them to a real-world government process.
+- Keep answers to 2-3 sentences. Always end by naming the exact button, tab, or page.
+- Do not ask for or store Aadhar numbers or other sensitive personal identifiers.
+- If truly unsure what the app does for something, say so honestly rather than guessing.`;
+
+// Free-tier model IDs on OpenRouter rotate in and out without warning (a
+// model that works today can 404 next week when it's retired). Primary is
+// OpenRouter's own "free model router" — it auto-selects whichever free
+// model is currently live, so it can't go stale the way a hardcoded ID can.
+// The fallback is a second hardcoded free model in case the router itself
+// has an issue, kept only as a backstop.
+const PRIMARY_MODEL = 'openrouter/free';
+const FALLBACK_MODEL = 'nvidia/nemotron-nano-9b-v2:free';
 
 async function callOpenRouter(apiKey, model, message) {
   return fetch('https://openrouter.ai/api/v1/chat/completions', {
@@ -23,9 +36,6 @@ async function callOpenRouter(apiKey, model, message) {
     headers: {
       Authorization: `Bearer ${apiKey}`,
       'Content-Type': 'application/json',
-      // OpenRouter asks for these two headers for attribution/rankings;
-      // they're optional but good practice, update the referer if you
-      // deploy under a different domain.
       'HTTP-Referer': 'https://ration-saathi-sigma.vercel.app',
       'X-Title': 'Ration Saathi',
     },
@@ -48,7 +58,7 @@ export async function POST(req) {
       return new Response('Please include a message.', { status: 400 });
     }
 
-    const apiKey = process.env.OPENROUTER_API_KEY;
+    const apiKey = (process.env.OPENROUTER_API_KEY || '').trim().replace(/^["']|["']$/g, '');
     if (!apiKey) {
       return new Response(
         'The AI assistant is not configured yet. Add an OPENROUTER_API_KEY in your .env file to enable it.',
@@ -64,12 +74,20 @@ export async function POST(req) {
     if (!upstream.ok || !upstream.body) {
       const errText = await upstream.text().catch(() => '');
       console.error('OpenRouter error:', upstream.status, errText);
-      return new Response('Sorry, something went wrong reaching the assistant. Please try again.', { status: 502 });
+      let reason = '';
+      try {
+        reason = JSON.parse(errText)?.error?.message || '';
+      } catch {}
+      const hint =
+        upstream.status === 401
+          ? ' (401 = the OPENROUTER_API_KEY on this deployment is missing, wrong, or not applied to this environment yet — check Vercel → Settings → Environment Variables, then redeploy.)'
+          : '';
+      return new Response(
+        `Sorry, the assistant couldn't be reached${reason ? `: ${reason}` : ''}.${hint}`,
+        { status: 502 }
+      );
     }
 
-    // OpenRouter streams OpenAI-style Server-Sent Events: lines like
-    // "data: {json}\n\n", ending with "data: [DONE]". We re-parse those
-    // into a plain text stream the client can just append to the screen.
     const stream = new ReadableStream({
       async start(controller) {
         const encoder = new TextEncoder();
@@ -82,7 +100,7 @@ export async function POST(req) {
             if (done) break;
             buffer += decoder.decode(value, { stream: true });
             const lines = buffer.split('\n');
-            buffer = lines.pop(); // keep the last (possibly partial) line for next chunk
+            buffer = lines.pop();
             for (const line of lines) {
               const trimmed = line.trim();
               if (!trimmed.startsWith('data:')) continue;
@@ -92,9 +110,7 @@ export async function POST(req) {
                 const json = JSON.parse(payload);
                 const delta = json.choices?.[0]?.delta?.content;
                 if (delta) controller.enqueue(encoder.encode(delta));
-              } catch {
-                // ignore keep-alive/malformed lines
-              }
+              } catch {}
             }
           }
           controller.close();

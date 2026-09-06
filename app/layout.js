@@ -29,7 +29,7 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${sora.variable} ${inter.variable}`}>
-      <body className="bg-gray-50 dark:bg-ink text-gray-900 dark:text-gray-100 antialiased font-body transition-colors">
+      <body className="bg-cream-50 dark:bg-ink text-gray-900 dark:text-gray-100 antialiased font-body transition-colors">
         <ThemeProvider>
           <AccessibilityProvider>
             <LanguageProvider>

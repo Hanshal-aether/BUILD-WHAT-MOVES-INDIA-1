@@ -1,43 +1,85 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, useCallback, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Header from '../../../components/Header';
 import Footer from '../../../components/Footer';
 
 export default function ShopLoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <ShopLoginContent />
+    </Suspense>
+  );
+}
+
+function ShopLoginContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [loginCode, setLoginCode] = useState('');
   const [pin, setPin] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [autoLoggingIn, setAutoLoggingIn] = useState(false);
+
+  const doLogin = useCallback(
+    async (code, pinValue) => {
+      setError('');
+      setLoading(true);
+      try {
+        const res = await fetch('/api/shops/auth', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ loginCode: code, pin: pinValue }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          setError(data.error || 'Login failed');
+          return;
+        }
+        window.localStorage.setItem('ration_saathi_shop', JSON.stringify(data));
+        router.push('/shops/dashboard');
+      } catch {
+        setError('Something went wrong. Please try again.');
+      } finally {
+        setLoading(false);
+        setAutoLoggingIn(false);
+      }
+    },
+    [router]
+  );
+
+  // Magic link: /shops/login?code=ANDHERI1&pin=1234 logs in with zero typing.
+  // Meant to be handed to each shop as a QR code or a WhatsApp link they save
+  // once — a dealer with a basic Android phone should never need to type a
+  // code and PIN more than the first time.
+  useEffect(() => {
+    const codeParam = searchParams.get('code');
+    const pinParam = searchParams.get('pin');
+    if (codeParam && pinParam) {
+      setAutoLoggingIn(true);
+      doLogin(codeParam, pinParam);
+    }
+  }, [searchParams, doLogin]);
 
   async function handleSubmit(e) {
     e.preventDefault();
-    setError('');
-    setLoading(true);
-    try {
-      const res = await fetch('/api/shops/auth', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ loginCode, pin }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.error || 'Login failed');
-        return;
-      }
-      window.localStorage.setItem('ration_saathi_shop', JSON.stringify(data));
-      router.push('/shops/dashboard');
-    } catch (err) {
-      setError('Something went wrong. Please try again.');
-    } finally {
-      setLoading(false);
-    }
+    doLogin(loginCode, pin);
+  }
+
+  if (autoLoggingIn) {
+    return (
+      <div className="min-h-screen bg-cream-50 dark:bg-ink flex flex-col items-center justify-center gap-3 px-4">
+        <div className="text-4xl">🏪</div>
+        <p className="text-sm text-gray-500 dark:text-gray-400">
+          {error ? error : 'Signing you in…'}
+        </p>
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-ink flex flex-col">
+    <div className="min-h-screen bg-cream-50 dark:bg-ink flex flex-col">
       <Header />
       <main className="flex-1 max-w-sm mx-auto w-full px-4 py-10 flex flex-col justify-center">
         <div className="text-center mb-8">

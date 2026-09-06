@@ -111,7 +111,7 @@ export default function ShopDashboardPage() {
   if (!shop) return null;
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-ink flex flex-col">
+    <div className="min-h-screen bg-cream-50 dark:bg-ink flex flex-col">
       <Header />
       <main className="flex-1 max-w-2xl mx-auto w-full px-4 py-6 pb-16">
         <div className="flex items-start justify-between mb-4">

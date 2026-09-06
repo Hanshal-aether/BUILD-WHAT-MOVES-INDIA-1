@@ -9,7 +9,7 @@ const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function LoginPage() {
   const router = useRouter();
-  const { t, lang, toggleLang } = useLanguage();
+  const { t, lang, toggleLang, langLabel } = useLanguage();
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
   const [step, setStep] = useState('email');
@@ -96,7 +96,7 @@ export default function LoginPage() {
         onClick={toggleLang}
         className="absolute top-5 right-5 z-10 text-sm font-medium text-white/90 px-3 py-1.5 rounded-full border border-white/30 bg-white/10 backdrop-blur hover:bg-white/20 transition-colors"
       >
-        {lang === 'en' ? 'हिं' : 'EN'}
+        {langLabel}
       </button>
 
       <div className="relative z-10 w-full max-w-sm animate-fadeIn">

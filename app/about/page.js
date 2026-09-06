@@ -6,11 +6,11 @@ import { useLanguage } from '../../context/LanguageContext';
 import { aboutText } from '../../lib/about-i18n';
 
 export default function AboutPage() {
-  const { lang, toggleLang } = useLanguage();
+  const { lang, toggleLang, langLabel } = useLanguage();
   const text = aboutText[lang] || aboutText.en;
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-ink">
+    <div className="min-h-screen bg-cream-50 dark:bg-ink">
       <header className="border-b border-gray-100 dark:border-white/10">
         <div className="max-w-3xl mx-auto px-4 h-16 flex items-center justify-between">
           <a href="/" className="flex items-center gap-2 font-semibold text-ink dark:text-white">
@@ -22,7 +22,7 @@ export default function AboutPage() {
               onClick={toggleLang}
               className="text-sm font-medium px-3 py-1.5 rounded-full border border-brand-200 dark:border-white/15 bg-white/80 dark:bg-white/5 dark:text-gray-200 hover:bg-brand-50 dark:hover:bg-white/10 hover:border-brand-400 transition-all"
             >
-              {lang === 'en' ? 'हिं' : 'EN'}
+              {langLabel}
             </button>
             <a href="/login" className="text-sm text-brand-600 dark:text-brand-300 font-medium hover:underline">
               {text.openApp}
