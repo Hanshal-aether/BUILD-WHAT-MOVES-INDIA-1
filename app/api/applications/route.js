@@ -51,6 +51,9 @@ export async function POST(req) {
         state: state || 'Maharashtra',
         status: 'new',
         formData: JSON.stringify(formData || {}),
+        history: {
+          create: { status: 'new', note: 'Application submitted', changedBy: 'citizen' },
+        },
       },
     });
 

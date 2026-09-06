@@ -11,7 +11,7 @@ export async function GET(req) {
       orderBy: { name: 'asc' },
       include: {
         timeSlots: {
-          where: { isBooked: false },
+          where: { status: 'open' },
           orderBy: [{ date: 'asc' }, { startTime: 'asc' }],
         },
       },

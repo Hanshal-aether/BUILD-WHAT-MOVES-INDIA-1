@@ -6,6 +6,7 @@ import ProtectedRoute from '../../components/ProtectedRoute';
 import Header from '../../components/Header';
 import BottomNav from '../../components/BottomNav';
 import StateSelectorModal from '../../components/StateSelectorModal';
+import SpeakButton from '../../components/SpeakButton';
 import { useLanguage } from '../../context/LanguageContext';
 
 const STATUS_STYLES = {
@@ -30,6 +31,24 @@ function StatusContent() {
   const [apps, setApps] = useState([]);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState(null);
+  const [historyById, setHistoryById] = useState({});
+
+  async function toggleExpand(appId) {
+    if (expandedId === appId) {
+      setExpandedId(null);
+      return;
+    }
+    setExpandedId(appId);
+    if (!historyById[appId]) {
+      try {
+        const res = await fetch(`/api/applications/${appId}`);
+        const detail = await res.json();
+        setHistoryById((prev) => ({ ...prev, [appId]: detail.history || [] }));
+      } catch {
+        setHistoryById((prev) => ({ ...prev, [appId]: [] }));
+      }
+    }
+  }
 
     useEffect(() => {
     const phone = window.localStorage.getItem('ration_saathi_phone');
@@ -122,12 +141,44 @@ function StatusContent() {
 
                 {app.status === 'needs_correction' && (
                   <div className="text-xs text-red-600 dark:text-red-300 bg-red-50 dark:bg-red-500/10 border border-red-100 dark:border-red-500/20 rounded-lg px-3 py-2 mb-3">
-                    {t('status.issue')}
+                    {(() => {
+                      const latestNote = [...(historyById[app.id] || [])]
+                        .reverse()
+                        .find((h) => h.status === 'needs_correction' && h.note);
+                      const reason = latestNote ? latestNote.note : t('status.issue');
+                      return (
+                        <div className="flex items-start justify-between gap-2">
+                          <span>{reason}</span>
+                          <SpeakButton
+                            text={reason}
+                            className="!bg-red-100 dark:!bg-red-500/20 !border-red-200 dark:!border-red-500/30 !text-red-700 dark:!text-red-200 shrink-0"
+                          />
+                        </div>
+                      );
+                    })()}
                   </div>
                 )}
 
                 {expanded && (
                   <div className="mb-3 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/10 p-3 text-sm space-y-2 animate-fadeIn">
+                    {(historyById[app.id] || []).length > 0 && (
+                      <div className="pb-2 mb-2 border-b border-gray-200 dark:border-white/10">
+                        <span className="text-gray-500 dark:text-gray-400 block mb-1.5">Timeline</span>
+                        <ul className="space-y-1.5">
+                          {historyById[app.id].map((h) => (
+                            <li key={h.id} className="flex justify-between gap-2 text-xs">
+                              <span className="text-gray-700 dark:text-gray-200">
+                                {t(`statusLabels.${h.status}`) || h.status}
+                                {h.note ? ` — ${h.note}` : ''}
+                              </span>
+                              <span className="text-gray-400 dark:text-gray-500 whitespace-nowrap">
+                                {new Date(h.createdAt).toLocaleDateString()}
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
                     <div className="flex justify-between">
                       <span className="text-gray-500 dark:text-gray-400">Contact method</span>
                       <span className="font-medium text-gray-800 dark:text-gray-100">
@@ -164,7 +215,7 @@ function StatusContent() {
 
                 <div className="flex gap-2">
                   <button
-                    onClick={() => setExpandedId(expanded ? null : app.id)}
+                    onClick={() => toggleExpand(app.id)}
                     className="flex-1 py-2 rounded-lg bg-gray-100 dark:bg-white/10 text-gray-700 dark:text-gray-200 text-sm font-medium hover:bg-gray-200 dark:hover:bg-white/15 transition-colors"
                   >
                     {expanded ? 'Hide details' : t('status.viewDetails')}

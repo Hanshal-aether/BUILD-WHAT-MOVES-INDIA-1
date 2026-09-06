@@ -5,6 +5,7 @@ import ProtectedRoute from '../../components/ProtectedRoute';
 import Header from '../../components/Header';
 import BottomNav from '../../components/BottomNav';
 import StateSelectorModal from '../../components/StateSelectorModal';
+import SpeakButton from '../../components/SpeakButton';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAppState } from '../../context/StateContext';
 
@@ -27,6 +28,20 @@ function ShopsContent() {
   const [activeShop, setActiveShop] = useState(null);
   const [booking, setBooking] = useState(null);
   const [notice, setNotice] = useState(null);
+  const [activeBooking, setActiveBooking] = useState(null);
+
+  useEffect(() => {
+    const phone = window.localStorage.getItem('ration_saathi_phone');
+    if (!phone) return;
+    const raw = window.localStorage.getItem(`ration_saathi_active_booking_${phone}`);
+    if (raw) {
+      try {
+        setActiveBooking(JSON.parse(raw));
+      } catch {
+        // ignore corrupt stored booking
+      }
+    }
+  }, []);
 
   useEffect(() => {
     if (!isPilot) {
@@ -65,12 +80,21 @@ function ShopsContent() {
       }
     }
 
+    if (phone === 'guest') {
+      setNotice({ error: 'Please log in with your phone number before booking a slot.' });
+      return;
+    }
+
     setBooking(slot.id);
     try {
-      const res = await fetch(`/api/timeslots/${slot.id}/book`, { method: 'POST' });
+      const res = await fetch(`/api/timeslots/${slot.id}/book`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone }),
+      });
+      const bookedSlot = await res.json().catch(() => ({}));
       if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || 'Failed to book');
+        throw new Error(bookedSlot.error || 'Failed to book');
       }
       setShops((prev) =>
         prev.map((s) =>
@@ -84,13 +108,33 @@ function ShopsContent() {
         slotId: slot.id,
         date: formatDateLabel(slot.date),
         time: `${slot.startTime} - ${slot.endTime}`,
+        bookingCode: bookedSlot.bookingCode,
       };
       window.localStorage.setItem(bookingKey, JSON.stringify(bookedInfo));
       setNotice(bookedInfo);
+      setActiveBooking(bookedInfo);
     } catch (e) {
       setNotice({ error: e.message || 'Something went wrong. Please try again.' });
     } finally {
       setBooking(null);
+    }
+  }
+
+  async function shareBooking(info) {
+    const message = `Ration Saathi booking: ${info.shopName}, ${info.date} ${info.time}. Code: ${info.bookingCode}. Show this code or the registered phone number at the shop counter.`;
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: 'Ration Saathi booking', text: message });
+      } catch {
+        // user cancelled share sheet — no-op
+      }
+    } else {
+      try {
+        await navigator.clipboard.writeText(message);
+        setNotice({ shopName: info.shopName, date: '', time: '', bookingCode: null, copied: true });
+      } catch {
+        // clipboard unavailable — nothing more we can do here
+      }
     }
   }
 
@@ -121,12 +165,25 @@ function ShopsContent() {
               ⚠️ {notice.error}
               <button onClick={() => setNotice(null)} className="ml-2 opacity-80 hover:opacity-100">✕</button>
             </div>
+          ) : notice.copied ? (
+            <div className="flex items-center gap-2 bg-ink text-white text-sm font-medium px-4 py-3 rounded-2xl shadow-xl border border-white/10">
+              📋 Booking details copied — paste them into an SMS or WhatsApp message
+              <button onClick={() => setNotice(null)} className="ml-2 opacity-80 hover:opacity-100">✕</button>
+            </div>
           ) : (
             <div className="flex items-center gap-3 bg-ink text-white px-4 py-3 rounded-2xl shadow-xl border border-white/10">
               <span className="w-8 h-8 rounded-full bg-saffron-500 flex items-center justify-center text-ink shrink-0">✓</span>
               <div className="text-sm leading-snug">
                 <div className="font-semibold">Your slot is booked!</div>
-                <div className="text-white/70">{notice.shop} · {notice.date}, {notice.time}</div>
+                <div className="text-white/70">{notice.shopName} · {notice.date}, {notice.time}</div>
+                {notice.bookingCode && (
+                  <div className="mt-1 font-mono text-base tracking-wider text-saffron-300">
+                    {notice.bookingCode}
+                  </div>
+                )}
+                <div className="text-white/50 text-xs mt-0.5">
+                  No smartphone needed at the counter — just tell the shop this code, or your phone number.
+                </div>
               </div>
               <button onClick={() => setNotice(null)} className="ml-2 opacity-60 hover:opacity-100">✕</button>
             </div>
@@ -139,6 +196,30 @@ function ShopsContent() {
           <h1 className="text-2xl font-display font-bold tracking-tight dark:text-white">{t('shops.title')}</h1>
           <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">{state}</p>
         </div>
+
+        {activeBooking?.bookingCode && (
+          <div className="mb-6 bg-ink dark:bg-white/5 border border-white/10 rounded-2xl p-4 animate-fadeIn">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <div className="text-white/60 text-xs uppercase tracking-wide">Your booking</div>
+                <div className="text-white font-medium text-sm mt-0.5">{activeBooking.shopName} · {activeBooking.date}, {activeBooking.time}</div>
+                <div className="text-white/50 text-xs mt-1">Show this code at the counter — no app or smartphone needed</div>
+              </div>
+              <div className="font-mono text-xl font-bold text-saffron-300 tracking-wider shrink-0">{activeBooking.bookingCode}</div>
+            </div>
+            <div className="flex gap-2 mt-3">
+              <SpeakButton
+                text={`Your booking is at ${activeBooking.shopName}, on ${activeBooking.date}, ${activeBooking.time}. Your code is ${activeBooking.bookingCode.split('').join(' ')}.`}
+              />
+              <button
+                onClick={() => shareBooking(activeBooking)}
+                className="inline-flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-full border border-white/20 bg-white/10 text-white hover:bg-white/20 transition-colors"
+              >
+                📤 Share with family
+              </button>
+            </div>
+          </div>
+        )}
 
         {loading && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -190,6 +271,12 @@ function ShopsContent() {
           ))}
         </div>
       </main>
+
+      <div className="text-center mt-2 mb-4 animate-fadeIn">
+        <a href="/shops/login" className="text-xs text-gray-400 dark:text-gray-500 underline hover:text-gray-600 dark:hover:text-gray-300">
+          Shop owner? Staff login →
+        </a>
+      </div>
 
       {activeShop && (
         <div

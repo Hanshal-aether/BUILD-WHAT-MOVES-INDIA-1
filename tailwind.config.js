@@ -9,33 +9,37 @@ module.exports = {
   theme: {
     extend: {
       colors: {
+        // National Heritage Palette — Navy Sovereignty + Saffron Orange.
+        // Reuses the existing brand/saffron token names so every component
+        // that already references them (bg-brand-900, text-saffron-500,
+        // etc.) reskins automatically with zero code changes elsewhere.
         brand: {
-          50: '#f2f1fe',
-          100: '#e5e3fd',
-          200: '#c6c1fb',
-          300: '#a29af8',
-          400: '#8477f4',
-          500: '#6d5bf6',
-          600: '#5641e8',
-          700: '#4338ca',
-          800: '#362da3',
-          900: '#1e1b4b',
+          50: '#EEF2F8',
+          100: '#D6E0EF',
+          200: '#AEC2DF',
+          300: '#7E9DC9',
+          400: '#4C74A8',
+          500: '#2C5589',
+          600: '#1E3F6E',
+          700: '#16305A',
+          800: '#102448',
+          900: '#0F2C59',
         },
         saffron: {
-          400: '#fcd34d',
-          500: '#fbbf24',
-          600: '#f59e0b',
+          400: '#FFB066',
+          500: '#FF6B00',
+          600: '#E65F00',
         },
-        ink: '#0f0d2b',
+        ink: '#0A1730',
       },
       fontFamily: {
         display: ['var(--font-display)', 'Sora', 'ui-sans-serif', 'system-ui'],
         body: ['var(--font-body)', 'Inter', 'ui-sans-serif', 'system-ui'],
       },
-            boxShadow: {
-        glow: '0 10px 40px -8px rgba(109, 91, 246, 0.45)',
-        'glow-saffron': '0 10px 30px -6px rgba(251, 191, 36, 0.45)',
-        soft: '0 2px 10px rgba(15, 13, 43, 0.06)',
+      boxShadow: {
+        glow: '0 10px 40px -8px rgba(15, 44, 89, 0.45)',
+        'glow-saffron': '0 10px 30px -6px rgba(255, 107, 0, 0.45)',
+        soft: '0 2px 10px rgba(10, 23, 48, 0.06)',
       },
       borderRadius: {
         '4xl': '2rem',

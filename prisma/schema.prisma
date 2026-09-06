@@ -8,14 +8,16 @@ datasource db {
 }
 
 model Citizen {
-  id        String   @id @default(uuid())
-  phone     String   @unique
-  name      String?
-  state     String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                String   @id @default(uuid())
+  phone             String   @unique
+  name              String?
+  rationCardNumber  String?
+  state             String
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
   applications Application[]
+  timeSlots    TimeSlot[]
 }
 
 model Application {
@@ -28,6 +30,22 @@ model Application {
   state           String
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+
+  history StatusHistory[]
+}
+
+// Audit trail: every status change is recorded with who/why, instead of
+// silently overwriting a single status field. This is what lets a citizen
+// (and a support agent) see exactly what happened and when, and what lets
+// "needs_correction" carry a real reason instead of one generic message.
+model StatusHistory {
+  id            String      @id @default(uuid())
+  applicationId String
+  application   Application @relation(fields: [applicationId], references: [id])
+  status        String
+  note          String? // e.g. "Address proof photo is blurry — please re-upload"
+  changedBy     String      @default("system") // "system" | "officer" | "citizen"
+  createdAt     DateTime    @default(now())
 }
 
 model FairPriceShop {
@@ -36,6 +54,11 @@ model FairPriceShop {
   address   String
   state     String
   image     String   @default("/images/shops/shop-1.svg")
+  // Demo-grade shop staff login. In production this would be a proper
+  // per-employee account, but a shared shop code + PIN is enough for a
+  // fair-price-shop counter with one shared terminal/phone.
+  loginCode String   @unique
+  pin       String   @default("1234")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -49,6 +72,29 @@ model TimeSlot {
   date      String
   startTime String
   endTime   String
-  isBooked  Boolean       @default(false)
-  createdAt DateTime      @default(now())
+
+  // Booking status lifecycle: open -> booked -> checked_in (fulfilled)
+  //                                          -> no_show
+  //                                          -> cancelled
+  status      String    @default("open")
+  isBooked    Boolean   @default(false) // kept in sync with status for backward compat
+  citizenId   String?
+  citizen     Citizen?  @relation(fields: [citizenId], references: [id])
+  bookingCode String?   @unique // short human-readable code shown to citizen + shop
+  checkedInAt DateTime?
+  createdAt   DateTime  @default(now())
+}
+
+// One-time passwords for real phone verification via Fast2SMS.
+// A row is created on send, checked and marked verified on submit, and
+// treated as expired/invalid after 5 minutes regardless of correctness.
+model Otp {
+  id        String   @id @default(uuid())
+  phone     String
+  code      String
+  verified  Boolean  @default(false)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([phone])
 }

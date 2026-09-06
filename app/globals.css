@@ -6,6 +6,19 @@ html {
   scroll-behavior: smooth;
 }
 
+/* Large-text mode: for elderly citizens and low-literacy users, toggled
+   from the header. Scales body copy and taps up without needing a full
+   separate layout, so every existing screen benefits automatically. */
+html.a11y-large-text {
+  font-size: 118%;
+}
+html.a11y-large-text button,
+html.a11y-large-text input,
+html.a11y-large-text select,
+html.a11y-large-text textarea {
+  font-size: 1.05em;
+}
+
 html, body {
   overflow-x: hidden;
   -webkit-tap-highlight-color: transparent;

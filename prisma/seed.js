@@ -2,15 +2,16 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
 const SHOPS = [
-  { name: 'Andheri Fair Price Shop', address: 'Andheri West, Mumbai, Maharashtra' },
-  { name: 'Dombivli Fair Price Shop', address: 'Dombivli East, Thane, Maharashtra' },
-  { name: 'Thane Fair Price Shop', address: 'Naupada, Thane, Maharashtra' },
-  { name: 'Malad Fair Price Shop', address: 'Malad West, Mumbai, Maharashtra' },
-  { name: 'Dadar Fair Price Shop', address: 'Dadar East, Mumbai, Maharashtra' },
-  { name: 'Chembur Fair Price Shop', address: 'Chembur, Mumbai, Maharashtra' },
-  { name: 'Kurla Fair Price Shop', address: 'Kurla West, Mumbai, Maharashtra' },
-  { name: 'Worli Fair Price Shop', address: 'Worli, Mumbai, Maharashtra' },
+  { name: 'Andheri Fair Price Shop', address: 'Andheri West, Mumbai, Maharashtra', loginCode: 'ANDHERI1' },
+  { name: 'Dombivli Fair Price Shop', address: 'Dombivli East, Thane, Maharashtra', loginCode: 'DOMBIVLI1' },
+  { name: 'Thane Fair Price Shop', address: 'Naupada, Thane, Maharashtra', loginCode: 'THANE1' },
+  { name: 'Malad Fair Price Shop', address: 'Malad West, Mumbai, Maharashtra', loginCode: 'MALAD1' },
+  { name: 'Dadar Fair Price Shop', address: 'Dadar East, Mumbai, Maharashtra', loginCode: 'DADAR1' },
+  { name: 'Chembur Fair Price Shop', address: 'Chembur, Mumbai, Maharashtra', loginCode: 'CHEMBUR1' },
+  { name: 'Kurla Fair Price Shop', address: 'Kurla West, Mumbai, Maharashtra', loginCode: 'KURLA1' },
+  { name: 'Worli Fair Price Shop', address: 'Worli, Mumbai, Maharashtra', loginCode: 'WORLI1' },
 ];
+const SHOP_PIN = '1234'; // demo PIN, same for every seeded shop
 
 const IMAGES = ['/images/shops/shop-1.svg', '/images/shops/shop-2.svg', '/images/shops/shop-3.svg'];
 
@@ -40,6 +41,18 @@ async function main() {
     create: { phone: '9876543212', name: 'Meera Nair', state: 'Maharashtra' },
   });
 
+  // A citizen with an already-approved card, for demoing shop-side check-in.
+  await prisma.citizen.upsert({
+    where: { phone: '9876543213' },
+    update: {},
+    create: {
+      phone: '9876543213',
+      name: 'Suresh Patil',
+      rationCardNumber: 'MH-RC-2026-004821',
+      state: 'Maharashtra',
+    },
+  });
+
   // Shops + time slots
   const shopRecords = [];
   for (let i = 0; i < SHOPS.length; i++) {
@@ -50,6 +63,8 @@ async function main() {
         address: s.address,
         state: 'Maharashtra',
         image: IMAGES[i % IMAGES.length],
+        loginCode: s.loginCode,
+        pin: SHOP_PIN,
       },
     });
     shopRecords.push(shop);
@@ -77,11 +92,13 @@ async function main() {
   // applications a real citizen actually submits through the app.
 
   console.log('Seed complete:', {
-    citizens: 3,
+    citizens: 4,
     shops: shopRecords.length,
     applications: 0,
     timeSlots: shopRecords.length * 3 * 4,
   });
+  console.log('\nShop staff logins (code / PIN), for the /shops/login demo:');
+  for (const s of SHOPS) console.log(`  ${s.name}: ${s.loginCode} / ${SHOP_PIN}`);
 }
 
 main()

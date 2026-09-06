@@ -5,11 +5,14 @@ import { useRouter } from 'next/navigation';
 import { useLanguage } from '../../context/LanguageContext';
 import Logo from '../../components/Logo';
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export default function LoginPage() {
   const router = useRouter();
   const { t, lang, toggleLang } = useLanguage();
-  const [phone, setPhone] = useState('');
-  const [pin, setPin] = useState('');
+  const [email, setEmail] = useState('');
+  const [code, setCode] = useState('');
+  const [step, setStep] = useState('email');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -18,25 +21,60 @@ export default function LoginPage() {
     if (flag === 'true') router.replace('/');
   }, [router]);
 
-  function handleSubmit(e) {
+  async function handleSendOtp(e) {
     e.preventDefault();
     setError('');
 
-    if (!/^\d{10}$/.test(phone)) {
-      setError(t('login.errorPhone'));
-      return;
-    }
-    if (!/^\d{6}$/.test(pin)) {
-      setError(t('login.errorPin'));
+    if (!EMAIL_REGEX.test(email)) {
+      setError('Enter a valid email address');
       return;
     }
 
     setLoading(true);
-    setTimeout(() => {
+    try {
+      const res = await fetch('/api/auth/send-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Could not send code');
+      setStep('otp');
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleVerifyOtp(e) {
+    e.preventDefault();
+    setError('');
+
+    if (!/^\d{6}$/.test(code)) {
+      setError('Enter the 6-digit code sent to your email');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const res = await fetch('/api/auth/verify-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, code }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Verification failed');
+
       window.localStorage.setItem('ration_saathi_logged_in', 'true');
-      window.localStorage.setItem('ration_saathi_phone', phone);
-      router.replace('/');
-    }, 600);
+      window.localStorage.setItem('ration_saathi_email', email);
+      const hasCard = window.localStorage.getItem('ration_saathi_card_number');
+      router.replace(hasCard ? '/' : '/link-card');
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -67,38 +105,40 @@ export default function LoginPage() {
             <Logo size={56} />
           </div>
           <h1 className="text-3xl font-display font-bold text-white tracking-tight">{t('login.title')}</h1>
-          <p className="text-white/70 text-sm mt-2">{t('login.subtitle')}</p>
+          <p className="text-white/70 text-sm mt-2">
+            {step === 'email' ? t('login.subtitle') : `Code sent to ${email}`}
+          </p>
         </div>
 
         <form
-          onSubmit={handleSubmit}
+          onSubmit={step === 'email' ? handleSendOtp : handleVerifyOtp}
           className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl p-6 shadow-2xl ring-1 ring-inset ring-white/10 space-y-4"
         >
-          <div>
-            <label className="block text-xs font-medium text-white/90 mb-1.5">{t('login.phoneLabel')}</label>
-            <input
-              type="tel"
-              inputMode="numeric"
-              maxLength={10}
-              value={phone}
-              onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
-              placeholder={t('login.phonePlaceholder')}
-              className="w-full px-4 py-3 rounded-xl bg-white/90 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-white"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-medium text-white/90 mb-1.5">{t('login.pinLabel')}</label>
-            <input
-              type="password"
-              inputMode="numeric"
-              maxLength={6}
-              value={pin}
-              onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
-              placeholder={t('login.pinPlaceholder')}
-              className="w-full px-4 py-3 rounded-xl bg-white/90 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-white"
-            />
-          </div>
+          {step === 'email' ? (
+            <div>
+              <label className="block text-xs font-medium text-white/90 mb-1.5">Email address</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@example.com"
+                className="w-full px-4 py-3 rounded-xl bg-white/90 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-white"
+              />
+            </div>
+          ) : (
+            <div>
+              <label className="block text-xs font-medium text-white/90 mb-1.5">6-digit code</label>
+              <input
+                type="text"
+                inputMode="numeric"
+                maxLength={6}
+                value={code}
+                onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
+                placeholder="123456"
+                className="w-full px-4 py-3 rounded-xl bg-white/90 text-gray-900 placeholder:text-gray-400 text-center tracking-[0.4em] font-mono text-lg focus:outline-none focus:ring-2 focus:ring-white"
+              />
+            </div>
+          )}
 
           {error && (
             <div className="text-sm text-red-100 bg-red-500/30 border border-red-300/40 rounded-xl px-3 py-2 animate-fadeIn">
@@ -112,18 +152,27 @@ export default function LoginPage() {
             className="w-full py-3 rounded-xl bg-white text-brand-700 font-semibold hover:bg-white/90 active:scale-[0.99] transition-all disabled:opacity-70 flex items-center justify-center gap-2"
           >
             {loading && <span className="w-4 h-4 rounded-full border-2 border-brand-300 border-t-brand-700 animate-spin" />}
-            {loading ? t('login.loading') : t('login.submit')}
+            {loading ? 'Please wait...' : step === 'email' ? 'Send code' : 'Verify & continue'}
           </button>
 
-                                      <p className="text-center text-xs text-white/70">{t('login.demoHint')}</p>
-          
-            <a href="/about"
+          {step === 'otp' && (
+            <button
+              type="button"
+              onClick={() => { setStep('email'); setCode(''); setError(''); }}
+              className="w-full text-center text-xs text-white/70 hover:text-white"
+            >
+              ← Change email
+            </button>
+          )}
+
+          <a
+            href="/about"
             className="block text-center text-xs text-white/60 hover:text-white/90 underline transition-colors pt-1"
           >
             Why we built this →
           </a>
         </form>
-      </div> 
+      </div>
     </div>
   );
 }

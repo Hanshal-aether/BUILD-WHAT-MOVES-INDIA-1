@@ -1,13 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 const FAQS = [
   { q: 'How do I apply for a ration card?', a: 'Tap "Apply" from the home screen, pick what you need (new card, add a family member, update address, or replace a lost card), and follow the 4-step form. It takes about 2 minutes.' },
   { q: 'What documents do I need?', a: 'Usually an identification document, address proof, a recent photograph, and — if adding a family member — a birth certificate. The app tells you exactly which ones apply.' },
   { q: 'How long does approval take?', a: 'Most applications are reviewed within 3-5 working days. Track live status any time from the "Status" tab.' },
   { q: 'What if my application needs correction?', a: 'You\'ll see a "Needs correction" badge on the Status page with the issue explained. Tap "Resubmit" to fix and send it again.' },
-  { q: 'How do fair price shop bookings work?', a: 'Open "Shops", tap any shop to see its open time slots, and pick one. Your slot is reserved immediately with an on-screen confirmation.' },
+  { q: 'How do fair price shop bookings work?', a: 'Open "Shops", tap any shop to see its open time slots, and pick one. You\'ll get a short code — show that or your phone number at the counter, no app needed there.' },
   { q: 'Do you collect my Aadhar number?', a: 'No. Ration Saathi only ever asks for your mobile number — no Aadhar or other government ID is collected.' },
   { q: 'Which states are supported?', a: 'Maharashtra is live as our pilot state with real fair price shop data. Other states show "Coming soon" as we expand.' },
   { q: 'Can I use this in Hindi?', a: 'Yes — tap the EN / हिं toggle in the header to switch the whole app\'s language instantly.' },
@@ -16,6 +16,72 @@ const FAQS = [
 export default function FAQWidget() {
   const [open, setOpen] = useState(false);
   const [openIndex, setOpenIndex] = useState(null);
+  const [messages, setMessages] = useState([]); // { role: 'user' | 'assistant', text }
+  const [input, setInput] = useState('');
+  const [sending, setSending] = useState(false);
+  const scrollRef = useRef(null);
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages, open]);
+
+  async function sendMessage(e) {
+    e.preventDefault();
+    const text = input.trim();
+    if (!text || sending) return;
+
+    setMessages((prev) => [...prev, { role: 'user', text }]);
+    setInput('');
+    setSending(true);
+
+    // Placeholder assistant message we stream tokens into.
+    setMessages((prev) => [...prev, { role: 'assistant', text: '' }]);
+
+    try {
+      const res = await fetch('/api/assistant', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: text }),
+      });
+
+      if (!res.body) {
+        const fallback = await res.text();
+        setMessages((prev) => {
+          const next = [...prev];
+          next[next.length - 1] = { role: 'assistant', text: fallback || 'Sorry, something went wrong.' };
+          return next;
+        });
+        return;
+      }
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let acc = '';
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        acc += decoder.decode(value, { stream: true });
+        setMessages((prev) => {
+          const next = [...prev];
+          next[next.length - 1] = { role: 'assistant', text: acc };
+          return next;
+        });
+      }
+    } catch {
+      setMessages((prev) => {
+        const next = [...prev];
+        next[next.length - 1] = {
+          role: 'assistant',
+          text: "Sorry, I couldn't reach the assistant. Please check the FAQs above, or try again in a moment.",
+        };
+        return next;
+      });
+    } finally {
+      setSending(false);
+    }
+  }
 
   return (
     <>
@@ -28,13 +94,13 @@ export default function FAQWidget() {
       </button>
 
       {open && (
-        <div className="fixed z-40 right-3 left-3 sm:left-auto sm:right-6 bottom-36 sm:bottom-24 sm:w-96 max-h-[28rem] bg-white dark:bg-brand-900 rounded-2xl shadow-2xl border border-gray-100 dark:border-white/10 flex flex-col overflow-hidden animate-fadeIn text-gray-900 dark:text-gray-100">
+        <div className="fixed z-40 right-3 left-3 sm:left-auto sm:right-6 bottom-36 sm:bottom-24 sm:w-96 max-h-[32rem] bg-white dark:bg-brand-900 rounded-2xl shadow-2xl border border-gray-100 dark:border-white/10 flex flex-col overflow-hidden animate-fadeIn text-gray-900 dark:text-gray-100">
           <div className="px-4 py-3 bg-gradient-to-r from-brand-600 to-brand-500 text-white flex items-center justify-between shrink-0">
             <span className="font-medium text-sm">Help & FAQs</span>
             <button onClick={() => setOpen(false)} className="opacity-80 hover:opacity-100">✕</button>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-2">
+          <div ref={scrollRef} className="flex-1 overflow-y-auto p-2">
             {FAQS.map((item, i) => {
               const isOpen = openIndex === i;
               return (
@@ -54,7 +120,43 @@ export default function FAQWidget() {
                 </div>
               );
             })}
+
+            {messages.length > 0 && (
+              <div className="px-2 pt-2 space-y-2">
+                <div className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide">
+                  Your question
+                </div>
+                {messages.map((m, i) => (
+                  <div
+                    key={i}
+                    className={`text-sm rounded-xl px-3 py-2 max-w-[85%] leading-relaxed ${
+                      m.role === 'user'
+                        ? 'ml-auto bg-brand-600 text-white'
+                        : 'mr-auto bg-gray-100 dark:bg-white/10 text-gray-800 dark:text-gray-100'
+                    }`}
+                  >
+                    {m.text || (sending && i === messages.length - 1 ? '…' : '')}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
+
+          <form onSubmit={sendMessage} className="p-2 border-t border-gray-100 dark:border-white/10 flex gap-2 shrink-0">
+            <input
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Still have a question? Ask here…"
+              className="flex-1 px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 dark:text-white focus:border-brand-500 outline-none"
+            />
+            <button
+              type="submit"
+              disabled={sending || !input.trim()}
+              className="px-3 py-2 rounded-lg bg-brand-600 text-white text-sm font-medium hover:bg-brand-700 disabled:opacity-50"
+            >
+              ➤
+            </button>
+          </form>
         </div>
       )}
     </>

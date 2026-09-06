@@ -3,6 +3,7 @@ import { Sora, Inter } from 'next/font/google';
 import { LanguageProvider } from '../context/LanguageContext';
 import { StateProvider } from '../context/StateContext';
 import { ThemeProvider } from '../context/ThemeContext';
+import { AccessibilityProvider } from '../context/AccessibilityContext';
 import FAQWidget from '../components/FAQWidget';
 
 const sora = Sora({
@@ -30,10 +31,12 @@ export default function RootLayout({ children }) {
     <html lang="en" className={`${sora.variable} ${inter.variable}`}>
       <body className="bg-gray-50 dark:bg-ink text-gray-900 dark:text-gray-100 antialiased font-body transition-colors">
         <ThemeProvider>
-          <LanguageProvider>
-            <StateProvider>{children}</StateProvider>
-          </LanguageProvider>
-                </ThemeProvider>
+          <AccessibilityProvider>
+            <LanguageProvider>
+              <StateProvider>{children}</StateProvider>
+            </LanguageProvider>
+          </AccessibilityProvider>
+        </ThemeProvider>
         <FAQWidget />
       </body>
     </html>

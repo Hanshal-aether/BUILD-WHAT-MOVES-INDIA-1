@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useLanguage } from '../context/LanguageContext';
 import { useAppState } from '../context/StateContext';
 import { useTheme } from '../context/ThemeContext';
+import { useAccessibility } from '../context/AccessibilityContext';
 import Logo from './Logo';
 
 export default function Header() {
@@ -12,6 +13,7 @@ export default function Header() {
   const { lang, toggleLang, t } = useLanguage();
   const { state, isPilot, setModalOpen } = useAppState();
   const { theme, toggleTheme } = useTheme();
+  const { largeText, toggleLargeText } = useAccessibility();
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   const handleLogout = () => {
@@ -63,7 +65,14 @@ export default function Header() {
               ⚙️
             </button>
             {settingsOpen && (
-              <div className="absolute right-0 mt-2 w-40 bg-white dark:bg-brand-900 rounded-xl shadow-lg border border-gray-100 dark:border-white/10 py-1 animate-fadeIn overflow-hidden">
+              <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-brand-900 rounded-xl shadow-lg border border-gray-100 dark:border-white/10 py-1 animate-fadeIn overflow-hidden">
+                <button
+                  onClick={toggleLargeText}
+                  className="w-full text-left px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors flex items-center justify-between"
+                >
+                  <span>🔎 Bigger text</span>
+                  <span>{largeText ? '✓ On' : 'Off'}</span>
+                </button>
                 <button
                   onClick={handleLogout}
                   className="w-full text-left px-4 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-white/5 transition-colors"
