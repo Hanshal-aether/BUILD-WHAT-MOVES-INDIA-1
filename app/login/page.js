@@ -75,10 +75,21 @@ if (previousEmail && previousEmail !== email) {
   window.localStorage.removeItem('ration_saathi_phone');
 }
 
-window.localStorage.setItem('ration_saathi_logged_in', 'true');
-window.localStorage.setItem('ration_saathi_email', email);
-const hasCard = window.localStorage.getItem('ration_saathi_card_number');
-router.replace(hasCard ? '/home' : '/link-card');
+      window.localStorage.setItem('ration_saathi_logged_in', 'true');
+      window.localStorage.setItem('ration_saathi_email', email);
+
+      // Check the real database, not just this browser's localStorage —
+      // this is what makes a returning user recognized on any device.
+      const lookupRes = await fetch(`/api/citizen/lookup?email=${encodeURIComponent(email)}`);
+      const lookupData = await lookupRes.json();
+
+      if (lookupData.found && lookupData.rationCardNumber) {
+        window.localStorage.setItem('ration_saathi_phone', lookupData.phone);
+        window.localStorage.setItem('ration_saathi_card_number', lookupData.rationCardNumber);
+        router.replace('/home');
+      } else {
+        router.replace('/link-card');
+      }
     } catch (err) {
       setError(err.message);
     } finally {

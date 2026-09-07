@@ -12,12 +12,20 @@ import { useAppState } from '../../context/StateContext';
 function formatDateLabel(dateStr) {
   const date = new Date(dateStr + 'T00:00:00');
   const today = new Date();
-  const tomorrow = new Date();
-  tomorrow.setDate(today.getDate() + 1);
-  const sameDay = (a, b) => a.toDateString() === b.toDateString();
-  if (sameDay(date, today)) return 'Today';
-  if (sameDay(date, tomorrow)) return 'Tomorrow';
-  return date.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' });
+  today.setHours(0, 0, 0, 0);
+  date.setHours(0, 0, 0, 0);
+
+  const diffDays = Math.round((date - today) / (1000 * 60 * 60 * 24));
+
+  if (diffDays === 0) return 'Today';
+  if (diffDays === 1) return 'Tomorrow';
+  if (diffDays === 2) return 'Day after tomorrow';
+  if (diffDays >= 3 && diffDays <= 6) {
+    // Weekday name only, never a numeric date — e.g. "Thursday"
+    return date.toLocaleDateString(undefined, { weekday: 'long' });
+  }
+  if (diffDays < 0) return 'Past'; // shouldn't normally appear, given the API's date filter
+  return `In ${diffDays} days`;
 }
 
 function ShopsContent() {
@@ -33,14 +41,32 @@ function ShopsContent() {
   useEffect(() => {
     const phone = window.localStorage.getItem('ration_saathi_phone');
     if (!phone) return;
-    const raw = window.localStorage.getItem(`ration_saathi_active_booking_${phone}`);
-    if (raw) {
-      try {
-        setActiveBooking(JSON.parse(raw));
-      } catch {
-        // ignore corrupt stored booking
-      }
-    }
+
+    // Fetch from the real database first — this is what makes an active
+    // booking show up on any device/browser, not just the one it was made on.
+    fetch(`/api/citizen/active-booking?phone=${encodeURIComponent(phone)}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.found) {
+          setActiveBooking({
+            shopId: data.shopId,
+            shopName: data.shopName,
+            slotId: data.slotId,
+            date: formatDateLabel(data.date),
+            time: `${data.startTime} - ${data.endTime}`,
+            bookingCode: data.bookingCode,
+          });
+        }
+      })
+      .catch(() => {
+        // fall back to whatever this browser remembers locally, if the fetch fails
+        const raw = window.localStorage.getItem(`ration_saathi_active_booking_${phone}`);
+        if (raw) {
+          try {
+            setActiveBooking(JSON.parse(raw));
+          } catch {}
+        }
+      });
   }, []);
 
   useEffect(() => {
