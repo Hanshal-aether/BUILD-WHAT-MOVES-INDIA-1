@@ -56,7 +56,7 @@ function ConfirmationContent() {
             {t('confirmation.track')}
           </button>
           <button
-            onClick={() => router.push('/')}
+            onClick={() => router.push('/home')}
             className="w-full py-3 rounded-xl bg-gray-100 text-gray-700 font-medium hover:bg-gray-200 transition-colors"
           >
             {t('confirmation.home')}

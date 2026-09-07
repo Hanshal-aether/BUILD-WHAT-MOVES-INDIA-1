@@ -18,7 +18,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     const flag = window.localStorage.getItem('ration_saathi_logged_in');
-    if (flag === 'true') router.replace('/');
+    if (flag === 'true') router.replace('/home');
   }, [router]);
 
   async function handleSendOtp(e) {
@@ -66,10 +66,19 @@ export default function LoginPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Verification failed');
 
-      window.localStorage.setItem('ration_saathi_logged_in', 'true');
-      window.localStorage.setItem('ration_saathi_email', email);
-      const hasCard = window.localStorage.getItem('ration_saathi_card_number');
-      router.replace(hasCard ? '/' : '/link-card');
+      const previousEmail = window.localStorage.getItem('ration_saathi_email');
+if (previousEmail && previousEmail !== email) {
+  // Switching accounts in this browser — clear the old account's
+  // card-linking state so the new account isn't wrongly skipped past it.
+  window.localStorage.removeItem('ration_saathi_card_number');
+  window.localStorage.removeItem('ration_saathi_household');
+  window.localStorage.removeItem('ration_saathi_phone');
+}
+
+window.localStorage.setItem('ration_saathi_logged_in', 'true');
+window.localStorage.setItem('ration_saathi_email', email);
+const hasCard = window.localStorage.getItem('ration_saathi_card_number');
+router.replace(hasCard ? '/home' : '/link-card');
     } catch (err) {
       setError(err.message);
     } finally {

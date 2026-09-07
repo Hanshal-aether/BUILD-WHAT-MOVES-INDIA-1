@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, Suspense } from 'react';
+import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Header from '../../../components/Header';
 import Footer from '../../../components/Footer';
@@ -20,60 +20,102 @@ function ShopLoginContent() {
   const [pin, setPin] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [autoLoggingIn, setAutoLoggingIn] = useState(false);
 
-  const doLogin = useCallback(
-    async (code, pinValue) => {
-      setError('');
-      setLoading(true);
-      try {
-        const res = await fetch('/api/shops/auth', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ loginCode: code, pin: pinValue }),
-        });
-        const data = await res.json();
-        if (!res.ok) {
-          setError(data.error || 'Login failed');
-          return;
-        }
-        window.localStorage.setItem('ration_saathi_shop', JSON.stringify(data));
-        router.push('/shops/dashboard');
-      } catch {
-        setError('Something went wrong. Please try again.');
-      } finally {
-        setLoading(false);
-        setAutoLoggingIn(false);
-      }
-    },
-    [router]
-  );
+  // Signed magic link: /shops/login?shop=ANDHERI1&exp=<timestamp>&sig=<hmac>
+  // The PIN is never present in the URL — sig is a signed proof that expires,
+  // so an old/leaked link stops working and never reveals the real PIN.
+  const shopParam = searchParams.get('shop');
+  const expParam = searchParams.get('exp');
+  const sigParam = searchParams.get('sig');
+  const hasTokenLink = Boolean(shopParam && expParam && sigParam);
+  const [tokenState, setTokenState] = useState(hasTokenLink ? 'pending' : null);
 
-  // Magic link: /shops/login?code=ANDHERI1&pin=1234 logs in with zero typing.
-  // Meant to be handed to each shop as a QR code or a WhatsApp link they save
-  // once — a dealer with a basic Android phone should never need to type a
-  // code and PIN more than the first time.
-  useEffect(() => {
-    const codeParam = searchParams.get('code');
-    const pinParam = searchParams.get('pin');
-    if (codeParam && pinParam) {
-      setAutoLoggingIn(true);
-      doLogin(codeParam, pinParam);
-    }
-  }, [searchParams, doLogin]);
-
-  async function handleSubmit(e) {
+  async function handleManualSubmit(e) {
     e.preventDefault();
-    doLogin(loginCode, pin);
+    setError('');
+    setLoading(true);
+    try {
+      const res = await fetch('/api/shops/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ loginCode, pin }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || 'Login failed');
+        return;
+      }
+      window.localStorage.setItem('ration_saathi_shop', JSON.stringify(data));
+      router.push('/shops/dashboard');
+    } catch {
+      setError('Something went wrong. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   }
 
-  if (autoLoggingIn) {
+  async function confirmTokenLogin() {
+    setLoading(true);
+    setError('');
+    try {
+      const res = await fetch('/api/shops/auth-token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ shop: shopParam, exp: expParam, sig: sigParam }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setTokenState('invalid');
+        setError(data.error || 'This link is invalid or has expired.');
+        return;
+      }
+      window.localStorage.setItem('ration_saathi_shop', JSON.stringify(data));
+      router.push('/shops/dashboard');
+    } catch {
+      setTokenState('invalid');
+      setError('Something went wrong. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  if (hasTokenLink) {
     return (
-      <div className="min-h-screen bg-cream-50 dark:bg-ink flex flex-col items-center justify-center gap-3 px-4">
+      <div className="min-h-screen bg-cream-50 dark:bg-ink flex flex-col items-center justify-center gap-4 px-4 text-center">
         <div className="text-4xl">🏪</div>
-        <p className="text-sm text-gray-500 dark:text-gray-400">
-          {error ? error : 'Signing you in…'}
-        </p>
+        {tokenState === 'pending' && (
+          <>
+            <h1 className="text-lg font-display font-bold dark:text-white">
+              Log in as {shopParam}?
+            </h1>
+            <p className="text-sm text-gray-500 dark:text-gray-400 max-w-xs">
+              This is a saved shop link. If this isn't your shop, close this page instead.
+            </p>
+            {error && (
+              <div className="text-sm text-red-600 dark:text-red-300 bg-red-50 dark:bg-red-500/10 border border-red-100 dark:border-red-500/20 rounded-lg px-3 py-2">
+                ⚠️ {error}
+              </div>
+            )}
+            <button
+              onClick={confirmTokenLogin}
+              disabled={loading}
+              className="px-6 py-3 rounded-xl bg-brand-600 text-white font-semibold hover:bg-brand-700 transition-colors disabled:opacity-60"
+            >
+              {loading ? 'Checking…' : 'Yes, log me in'}
+            </button>
+          </>
+        )}
+        {tokenState === 'invalid' && (
+          <>
+            <p className="text-sm text-red-600 dark:text-red-300">{error}</p>
+            <button
+              onClick={() => setTokenState(null)}
+              className="text-sm underline text-brand-600 dark:text-brand-300"
+            >
+              Enter shop code and PIN manually instead
+            </button>
+          </>
+        )}
       </div>
     );
   }
@@ -90,7 +132,7 @@ function ShopLoginContent() {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleManualSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Shop code</label>
             <input

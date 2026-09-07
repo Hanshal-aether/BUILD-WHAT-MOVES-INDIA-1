@@ -20,7 +20,7 @@ export default function LinkCardPage() {
     const flag = window.localStorage.getItem('ration_saathi_logged_in');
     if (flag !== 'true') router.replace('/login');
     const existing = window.localStorage.getItem('ration_saathi_card_number');
-    if (existing) router.replace('/');
+    if (existing) router.replace('/home');
   }, [router]);
 
   async function handlePhoneSubmit(e) {
@@ -89,7 +89,7 @@ export default function LinkCardPage() {
 
       window.localStorage.setItem('ration_saathi_card_number', household.cardNumber);
       window.localStorage.setItem('ration_saathi_household', JSON.stringify(household.members));
-      router.replace('/');
+      router.replace('/home');
     } catch (err) {
       setError(err.message);
     } finally {

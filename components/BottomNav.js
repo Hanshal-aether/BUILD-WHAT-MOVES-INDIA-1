@@ -4,7 +4,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useLanguage } from '../context/LanguageContext';
 
 const ROUTES = [
-  { href: '/', key: 'home', icon: '⌂' },
+  { href: '/home', key: 'home', icon: '⌂' },
   { href: '/apply', key: 'apply', icon: '➕' },
   { href: '/status', key: 'status', icon: '◷' },
   { href: '/shops', key: 'shops', icon: '🏪' },

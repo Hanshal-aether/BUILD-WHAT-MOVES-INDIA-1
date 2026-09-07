@@ -25,7 +25,7 @@ export default function Header() {
     <header className="sticky top-0 z-30 backdrop-blur-lg bg-white/70 dark:bg-ink/80 border-b border-brand-100 dark:border-white/10 transition-colors">
       <div className="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between gap-2">
         <button
-          onClick={() => router.push('/')}
+          onClick={() => router.push('/home')}
           className="flex items-center gap-2.5 font-semibold text-ink dark:text-white shrink-0"
         >
           <Logo size={32} className="drop-shadow-sm" />
