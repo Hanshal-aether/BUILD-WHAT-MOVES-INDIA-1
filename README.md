@@ -194,7 +194,10 @@ Fill in `.env`:
 
 ```env
 DATABASE_URL="your Neon postgres connection string"
-GEMINI_API_KEY=""   # unused — kept for future re-enablement, safe to leave blank
+OPENROUTER_API_KEY=""   
+GMAIL_USER=""
+GMAIL_APP_PASSWORD=""
+MAGIC_LINK_SECRET=""
 ```
 
 ```bash
