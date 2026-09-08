@@ -3,6 +3,7 @@
 import Logo from '../components/Logo';
 import Footer from '../components/Footer';
 import { useLanguage } from '../context/LanguageContext';
+import { useTheme } from '../context/ThemeContext';
 import { landingText } from '../lib/landing-i18n';
 
 // Thin tricolor accent bar instead of a flag emoji — emoji flags render as
@@ -21,6 +22,7 @@ function TricolorBar({ className = '' }) {
 
 export default function LandingPage() {
   const { lang, toggleLang, langLabel } = useLanguage();
+  const { theme, toggleTheme } = useTheme();
   const text = landingText[lang] || landingText.en;
 
   return (
@@ -36,6 +38,13 @@ export default function LandingPage() {
             className="text-sm font-medium px-4 py-2 rounded-full border border-brand-200 dark:border-white/15 bg-white/80 dark:bg-white/5 dark:text-gray-200 hover:bg-brand-50 dark:hover:bg-white/10 hover:border-brand-400 transition-all"
           >
             {langLabel}
+          </button>
+          <button
+            onClick={toggleTheme}
+            aria-label="Toggle dark mode"
+            className="w-10 h-10 rounded-full border border-brand-200 dark:border-white/15 bg-white/80 dark:bg-white/5 shadow-soft hover:bg-brand-50 dark:hover:bg-white/10 hover:border-brand-400 transition-all flex items-center justify-center"
+          >
+            {theme === 'dark' ? '☀️' : '🌙'}
           </button>
           <a
             href="/login"
