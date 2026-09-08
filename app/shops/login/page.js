@@ -140,7 +140,7 @@ function ShopLoginContent() {
               autoCapitalize="characters"
               value={loginCode}
               onChange={(e) => setLoginCode(e.target.value)}
-              placeholder="e.g. ANDHERI1"
+              placeholder="e.g. SHOP ID"
               className="w-full px-4 py-3 text-lg rounded-xl border-2 border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 dark:text-white focus:border-brand-500 outline-none tracking-wide"
               required
             />

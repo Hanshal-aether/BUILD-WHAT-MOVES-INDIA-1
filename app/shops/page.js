@@ -21,11 +21,23 @@ function formatDateLabel(dateStr) {
   if (diffDays === 1) return 'Tomorrow';
   if (diffDays === 2) return 'Day after tomorrow';
   if (diffDays >= 3 && diffDays <= 6) {
-    // Weekday name only, never a numeric date — e.g. "Thursday"
     return date.toLocaleDateString(undefined, { weekday: 'long' });
   }
-  if (diffDays < 0) return 'Past'; // shouldn't normally appear, given the API's date filter
+  if (diffDays < 0) return 'Past';
   return `In ${diffDays} days`;
+}
+
+// Guaranteed client-side safety net: even if the API's own date filter has
+// a gap (timezone mismatch, stale cache, etc.), a past-dated slot will
+// never render as bookable. This is checked fresh every time the page
+// renders, so "today" always means today, not whatever day the data was
+// originally seeded for.
+function isTodayOrFuture(dateStr) {
+  const date = new Date(dateStr + 'T00:00:00');
+  date.setHours(0, 0, 0, 0);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return date >= today;
 }
 
 function ShopsContent() {
@@ -42,8 +54,6 @@ function ShopsContent() {
     const phone = window.localStorage.getItem('ration_saathi_phone');
     if (!phone) return;
 
-    // Fetch from the real database first — this is what makes an active
-    // booking show up on any device/browser, not just the one it was made on.
     fetch(`/api/citizen/active-booking?phone=${encodeURIComponent(phone)}`)
       .then((res) => res.json())
       .then((data) => {
@@ -59,7 +69,6 @@ function ShopsContent() {
         }
       })
       .catch(() => {
-        // fall back to whatever this browser remembers locally, if the fetch fails
         const raw = window.localStorage.getItem(`ration_saathi_active_booking_${phone}`);
         if (raw) {
           try {
@@ -87,7 +96,7 @@ function ShopsContent() {
     return () => clearTimeout(timer);
   }, [notice]);
 
-    async function bookSlot(shop, slot) {
+  async function bookSlot(shop, slot) {
     const phone = window.localStorage.getItem('ration_saathi_phone') || 'guest';
     const bookingKey = `ration_saathi_active_booking_${phone}`;
 
@@ -101,9 +110,7 @@ function ShopsContent() {
           );
           if (!proceed) return;
         }
-      } catch {
-        // ignore corrupt stored booking
-      }
+      } catch {}
     }
 
     if (phone === 'guest') {
@@ -151,16 +158,12 @@ function ShopsContent() {
     if (navigator.share) {
       try {
         await navigator.share({ title: 'Ration Saathi booking', text: message });
-      } catch {
-        // user cancelled share sheet — no-op
-      }
+      } catch {}
     } else {
       try {
         await navigator.clipboard.writeText(message);
         setNotice({ shopName: info.shopName, date: '', time: '', bookingCode: null, copied: true });
-      } catch {
-        // clipboard unavailable — nothing more we can do here
-      }
+      } catch {}
     }
   }
 
@@ -264,37 +267,40 @@ function ShopsContent() {
         )}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {shops.map((shop, i) => (
-            <div
-              key={shop.id}
-              className="bg-white dark:bg-white/5 rounded-2xl border border-gray-100 dark:border-white/10 shadow-sm overflow-hidden hover:border-brand-300 dark:hover:border-brand-400 hover:shadow-lg transition-all animate-fadeIn"
-              style={{ animationDelay: `${0.05 * i}s` }}
-            >
-              <div className="h-36 bg-gradient-to-br from-brand-50 to-brand-100 dark:from-white/10 dark:to-white/5 flex items-center justify-center">
-                <img src={shop.image} alt={shop.name} className="h-20 opacity-90" />
-              </div>
-              <div className="p-4">
-                <h3 className="font-semibold text-gray-900 dark:text-white">{shop.name}</h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1 mt-1">📍 {shop.address}</p>
-                <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1 mt-1">⏰ {t('shops.hours')}</p>
-
-                <div className="grid grid-cols-3 gap-2 my-3 text-center text-xs text-gray-600 dark:text-gray-300">
-                  <div className="bg-gray-50 dark:bg-white/10 rounded-lg py-1.5">🍚 Rice</div>
-                  <div className="bg-gray-50 dark:bg-white/10 rounded-lg py-1.5">🌾 Wheat</div>
-                  <div className="bg-gray-50 dark:bg-white/10 rounded-lg py-1.5">🥄 Sugar</div>
+          {shops.map((shop, i) => {
+            const futureSlots = shop.timeSlots.filter((sl) => isTodayOrFuture(sl.date));
+            return (
+              <div
+                key={shop.id}
+                className="bg-white dark:bg-white/5 rounded-2xl border border-gray-100 dark:border-white/10 shadow-sm overflow-hidden hover:border-brand-300 dark:hover:border-brand-400 hover:shadow-lg transition-all animate-fadeIn"
+                style={{ animationDelay: `${0.05 * i}s` }}
+              >
+                <div className="h-36 bg-gradient-to-br from-brand-50 to-brand-100 dark:from-white/10 dark:to-white/5 flex items-center justify-center">
+                  <img src={shop.image} alt={shop.name} className="h-20 opacity-90" />
                 </div>
+                <div className="p-4">
+                  <h3 className="font-semibold text-gray-900 dark:text-white">{shop.name}</h3>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1 mt-1">📍 {shop.address}</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1 mt-1">⏰ {t('shops.hours')}</p>
 
-                <button
-                  onClick={() => setActiveShop(shop)}
-                  className="w-full py-2.5 rounded-lg bg-brand-50 dark:bg-white/10 text-brand-700 dark:text-brand-200 font-medium text-sm hover:bg-brand-100 dark:hover:bg-white/15 transition-colors flex items-center justify-center gap-1.5"
-                >
-                  {shop.timeSlots.length > 0
-                    ? `${t('shops.bookSlot')} · ${shop.timeSlots.length} open`
-                    : 'No slots left'}
-                </button>
+                  <div className="grid grid-cols-3 gap-2 my-3 text-center text-xs text-gray-600 dark:text-gray-300">
+                    <div className="bg-gray-50 dark:bg-white/10 rounded-lg py-1.5">🍚 Rice</div>
+                    <div className="bg-gray-50 dark:bg-white/10 rounded-lg py-1.5">🌾 Wheat</div>
+                    <div className="bg-gray-50 dark:bg-white/10 rounded-lg py-1.5">🥄 Sugar</div>
+                  </div>
+
+                  <button
+                    onClick={() => setActiveShop({ ...shop, timeSlots: futureSlots })}
+                    className="w-full py-2.5 rounded-lg bg-brand-50 dark:bg-white/10 text-brand-700 dark:text-brand-200 font-medium text-sm hover:bg-brand-100 dark:hover:bg-white/15 transition-colors flex items-center justify-center gap-1.5"
+                  >
+                    {futureSlots.length > 0
+                      ? `${t('shops.bookSlot')} · ${futureSlots.length} open`
+                      : 'No slots left'}
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </main>
 
