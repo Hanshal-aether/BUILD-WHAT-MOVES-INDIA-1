@@ -6,7 +6,7 @@ Built for **Build What Moves India 2026**.
 
 **Built by:** [Hanshal Gajula](https://www.linkedin.com/in/hanshal-gajula)
 
-**Live site:** [ration-saathi-sigma.vercel.app](https://ration-saathi-lime.vercel.app/) · 
+**Live site:** [ration-saathi-lime.vercel.app](https://ration-saathi-lime.vercel.app/) · 
 
 ---
 
