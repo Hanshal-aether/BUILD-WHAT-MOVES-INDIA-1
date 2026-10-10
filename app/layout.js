@@ -21,9 +21,12 @@ const inter = Inter({
 });
 
 export const metadata = {
-  title: 'Ration Saathi — Ration card services, simplified',
+  title: "Ration Saathi — Ration Card Services, Simplified",
   description:
-    'Apply for, track, and manage your ration card online. Phone-only login, no Aadhar required.',
+    "Explore Ration Saathi, a hackathon-built prototype for ration card application tracking, fair price shop slot booking, and accessible services in India.",
+  alternates: {
+    canonical: "https://ration-saathi-lime.vercel.app/",
+  },
 };
 
 export default function RootLayout({ children }) {
