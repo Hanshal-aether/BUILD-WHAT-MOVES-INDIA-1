@@ -27,6 +27,9 @@ export const metadata = {
   alternates: {
     canonical: "https://ration-saathi-lime.vercel.app/",
   },
+  verification: {
+    google: "7dXaG-LiB9Oa9piO9oZ0OY0509qFiWDyxA5G7--yiVE",
+  },
 };
 
 export default function RootLayout({ children }) {
