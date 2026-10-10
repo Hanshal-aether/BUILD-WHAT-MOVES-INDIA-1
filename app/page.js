@@ -20,6 +20,15 @@ function TricolorBar({ className = '' }) {
   );
 }
 
+export const metadata = {
+  title: "Ration Saathi — Ration Card Services, Simplified",
+  description:
+    "Explore Ration Saathi, a hackathon-built prototype for ration card application tracking, fair price shop slot booking, and accessible services in India.",
+  alternates: {
+    canonical: "https://ration-saathi-lime.vercel.app/",
+  },
+};
+
 export default function LandingPage() {
   const { lang, toggleLang, langLabel } = useLanguage();
   const { theme, toggleTheme } = useTheme();
